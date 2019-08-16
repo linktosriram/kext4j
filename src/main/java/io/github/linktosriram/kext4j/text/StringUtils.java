@@ -1575,6 +1575,32 @@ public final class StringUtils {
         return accumulator;
     }
 
+    public static boolean regionMatches(final CharSequence first, final int firstOffset, final CharSequence second, final int secondOffset, final int length) {
+        return regionMatches(first, firstOffset, second, secondOffset, length, false);
+    }
+
+    // Returns true if the specified range in first char sequence is equal to the specified range in second char sequence.
+    public static boolean regionMatches(final CharSequence first, final int firstOffset, final CharSequence second, final int secondOffset, final int length,
+                                        final boolean ignoreCase) {
+        return first instanceof String && second instanceof String ?
+            regionMatches((String) first, firstOffset, (String) second, secondOffset, length, ignoreCase) :
+            regionMatchesImpl(first, firstOffset, second, secondOffset, length, ignoreCase);
+    }
+
+    @Contract(pure = true)
+    public static boolean regionMatches(final String first, final int firstOffset, final String second,
+                                        final int secondOffset, final int length) {
+        return regionMatches(first, firstOffset, second, secondOffset, length, false);
+    }
+
+    // Returns true if the specified range in first string is equal to the specified range in second string.
+    @Contract(pure = true)
+    public static boolean regionMatches(final String first, final int firstOffset, final String second, final int secondOffset,
+                                        final int length,
+                                        final boolean ignoreCase) {
+        return ignoreCase ? first.regionMatches(true, firstOffset, second, secondOffset, length) : first.regionMatches(firstOffset, second, secondOffset, length);
+    }
+
     // If this char sequence starts with the given prefix, returns a new char sequence with the prefix removed. Otherwise, returns a new char sequence
     // with the same characters.
     public static @NotNull CharSequence removePrefix(final @NotNull CharSequence seq, final @NotNull CharSequence prefix) {
@@ -1896,23 +1922,6 @@ public final class StringUtils {
 
     public static String substring(final CharSequence seq, final int startIndex, final int endIndex) {
         return seq.subSequence(startIndex, endIndex).toString();
-    }
-
-    @Contract(pure = true)
-    public static boolean regionMatches(final String first, final int firstOffset, final String second,
-                                        final int secondOffset, final int length) {
-        return regionMatches(first, firstOffset, second, secondOffset, length, false);
-    }
-
-    @Contract(pure = true)
-    public static boolean regionMatches(final String first, final int firstOffset, final String second, final int secondOffset,
-                                        final int length,
-                                        final boolean ignoreCase) {
-        if (!ignoreCase) {
-            return first.regionMatches(firstOffset, second, secondOffset, length);
-        } else {
-            return first.regionMatches(true, firstOffset, second, secondOffset, length);
-        }
     }
 
     public static CharSequence take(final CharSequence seq, @NonNls final int n) {
