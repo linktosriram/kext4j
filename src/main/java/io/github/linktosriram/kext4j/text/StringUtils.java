@@ -588,9 +588,7 @@ public final class StringUtils {
     @Contract("_, _, _ -> param2")
     public static @NotNull <C extends Appendable> C filterNotTo(final @NotNull CharSequence seq, final @NotNull C destination,
                                                                 final @NotNull Predicate<? super Character> predicate) {
-        final int length = seq.length();
-        final Predicate<? super Character> negated = predicate.negate();
-        return filterTo(seq, destination, length, negated);
+        return filterTo(seq, destination, predicate.negate());
     }
 
     // Appends all characters matching the given predicate to the given destination.
@@ -989,7 +987,7 @@ public final class StringUtils {
 
     // Returns true if this string is empty or consists solely of whitespace characters.
     public static boolean isBlank(final @NotNull CharSequence seq) {
-        return seq.length() == 0 || CollectionUtils.all(indices(seq), i -> isWhitespace(seq.charAt(i)));
+        return isEmpty(seq) || CollectionUtils.all(indices(seq), i -> isWhitespace(seq.charAt(i)));
     }
 
     // Returns true if this char sequence is empty (contains no characters).
@@ -1852,13 +1850,9 @@ public final class StringUtils {
         });
     }
 
-    //////
-
-    public static String replaceRange(final String str, final int startIndex, final int endIndex, final CharSequence replacement) {
-        return replaceRange((CharSequence) str, startIndex, endIndex, replacement).toString();
-    }
-
-    public static CharSequence replaceRange(final CharSequence seq, @NonNls final int startIndex, @NonNls final int endIndex, final CharSequence replacement) {
+    // Returns a char sequence with content of this char sequence where its part at the given range is replaced with the replacement char sequence.
+    public static @NotNull CharSequence replaceRange(final @NotNull CharSequence seq, @NonNls final int startIndex, @NonNls final int endIndex,
+                                                     final @NotNull CharSequence replacement) {
         if (endIndex < startIndex) {
             throw new IndexOutOfBoundsException("End index (" + endIndex + ") is less than start index (" + startIndex + ").");
         }
@@ -1867,6 +1861,172 @@ public final class StringUtils {
         sb.append(replacement);
         sb.append(seq, endIndex, seq.length());
         return sb;
+    }
+
+    public static @NotNull String replaceRange(final @NotNull String str, final int startIndex, final int endIndex, final @NotNull CharSequence replacement) {
+        return replaceRange((CharSequence) str, startIndex, endIndex, replacement).toString();
+    }
+
+    public static @NotNull CharSequence replaceRange(final @NotNull CharSequence seq, final @NotNull IntRange range, final @NotNull CharSequence replacement) {
+        return replaceRange(seq, range.getStart(), range.getEndInclusive() + 1, replacement);
+    }
+
+    public static @NotNull String replaceRange(final @NotNull String seq, final @NotNull IntRange range, final @NotNull CharSequence replacement) {
+        return replaceRange((CharSequence) seq, range, replacement).toString();
+    }
+
+    // Returns a char sequence with characters in reversed order.
+    public static @NotNull CharSequence reversed(final @NotNull CharSequence seq) {
+        return new StringBuilder(seq).reverse();
+    }
+
+    // Returns a string with characters in reversed order.
+    public static @NotNull String reversed(final String str) {
+        return reversed((CharSequence) str).toString();
+    }
+
+    // Returns the single character, or throws an exception if the char sequence is empty or has more than one character.
+    public static char single(final @NotNull CharSequence seq) {
+        switch (seq.length()) {
+            case 0:
+                throw new NoSuchElementException("Char sequence is empty.");
+            case 1:
+                return seq.charAt(0);
+            default:
+                throw new IllegalArgumentException("Char sequence has more than one element.");
+        }
+    }
+
+    // Returns the single character matching the given predicate, or throws exception if there is no or more than one matching character.
+    public static char single(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
+        Character single = null;
+        boolean found = false;
+        final int length = seq.length();
+        for (int i = 0; i < length; i++) {
+            final char element = seq.charAt(i);
+            if (predicate.test(element)) {
+                if (found) {
+                    throw new IllegalArgumentException("Char sequence contains more than one matching element.");
+                }
+                single = element;
+                found = true;
+            }
+        }
+        if (!found) {
+            throw new NoSuchElementException("Char sequence contains no character matching the predicate.");
+        }
+        return single;
+    }
+
+    // Returns single character, or null if the char sequence is empty or has more than one character.
+    public static @Nullable Character singleOrNull(final @NotNull CharSequence seq) {
+        return seq.length() == 1 ? seq.charAt(0) : null;
+    }
+
+    // Returns the single character matching the given predicate, or null if character was not found or more than one character was found.
+    public static @Nullable Character singleOrNull(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
+        Character single = null;
+        boolean found = false;
+        final int length = seq.length();
+        for (int i = 0; i < length; i++) {
+            final char element = seq.charAt(i);
+            if (predicate.test(element)) {
+                if (found) {
+                    return null;
+                }
+                single = element;
+                found = true;
+            }
+        }
+        if (!found) {
+            return null;
+        }
+        return single;
+    }
+
+    // Returns a char sequence containing characters of the original char sequence at the specified range of indices.
+    public static @NotNull CharSequence slice(final @NotNull CharSequence seq, final @NotNull IntRange indices) {
+        return indices.isEmpty() ? "" : subSequence(seq, indices);
+    }
+
+    // Returns a string containing characters of the original string at the specified range of indices.
+    public static @NotNull String slice(final @NotNull String str, final @NotNull IntRange indices) {
+        return indices.isEmpty() ? "" : substring(str, indices);
+    }
+
+    // Returns a char sequence containing characters of the original char sequence at specified indices.
+    public static @NotNull CharSequence slice(final @NotNull CharSequence seq, final @NotNull Iterable<Integer> indices) {
+        final int size = CollectionUtils.collectionSizeOrDefault(indices, 10);
+        if (size == 0) {
+            return "";
+        }
+        final StringBuilder result = new StringBuilder(size);
+        for (final int i : indices) {
+            result.append(seq.charAt(i));
+        }
+        return result;
+    }
+
+    // Returns a string containing characters of the original string at specified indices.
+    public static @NotNull String slice(final @NotNull String str, final @NotNull Iterable<Integer> indices) {
+        return slice((CharSequence) str, indices).toString();
+    }
+
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters) {
+        return split(seq, delimiters, false, 0);
+    }
+
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters, final boolean ignoreCase) {
+        return split(seq, delimiters, ignoreCase, 0);
+    }
+
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
+        return split(seq, delimiters, false, limit);
+    }
+
+    // Splits this char sequence to a list of strings around occurrences of the specified delimiters.
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters, final boolean ignoreCase,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
+        if (delimiters.size() == 1) {
+            final String delimiter = delimiters.iterator().next();
+            if (!isEmpty(delimiter)) {
+                return split(seq, delimiter, ignoreCase, limit);
+            }
+        }
+        final Sequence<IntRange> sequence = rangesDelimitedBy(seq, delimiters, ignoreCase, limit);
+        final Iterable<IntRange> iterable = SequenceUtils.asIterable(sequence);
+        return CollectionUtils.map(iterable, range -> substring(seq, range));
+    }
+
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull char[] delimiters) {
+        return split(seq, delimiters, false, 0);
+    }
+
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull char[] delimiters, final boolean ignoreCase) {
+        return split(seq, delimiters, ignoreCase, 0);
+    }
+
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull char[] delimiters,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
+        return split(seq, delimiters, false, limit);
+    }
+
+    // Splits this char sequence to a list of strings around occurrences of the specified delimiters.
+    public static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull char[] delimiters, final boolean ignoreCase,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
+        if (delimiters.length == 1) {
+            return split(seq, Character.toString(delimiters[0]), ignoreCase, limit);
+        }
+        final Sequence<IntRange> sequence = rangesDelimitedBy(seq, delimiters, ignoreCase, limit);
+        final Iterable<IntRange> iterable = SequenceUtils.asIterable(sequence);
+        return CollectionUtils.map(iterable, range -> substring(seq, range));
+    }
+
+    //////
+
+    public static CharSequence subSequence(final CharSequence seq, final IntRange range) {
+        return seq.subSequence(range.getStart(), range.getEndInclusive() + 1);
     }
 
     public static boolean startsWith(final CharSequence seq, final CharSequence prefix, final int startIndex) {
@@ -1914,6 +2074,10 @@ public final class StringUtils {
 
     public static String substring(final CharSequence seq, final IntRange range) {
         return seq.subSequence(range.getStart(), range.getEndInclusive() + 1).toString();
+    }
+
+    public static String substring(final String str, final IntRange range) {
+        return substring(str, range.getStart(), range.getEndInclusive() + 1);
     }
 
     public static String substring(final CharSequence seq, final int startIndex) {
@@ -2140,6 +2304,13 @@ public final class StringUtils {
         return rangesDelimitedBy(seq, delimiters, 0, false, 0);
     }
 
+    @Contract(pure = true)
+    private static @NotNull Sequence<IntRange> rangesDelimitedBy(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters,
+                                                                 final boolean ignoreCase, final int limit) {
+        return rangesDelimitedBy(seq, delimiters, 0, ignoreCase, limit);
+    }
+
+    @Contract(value = "_, _, _, _, _ -> new", pure = true)
     private static @NotNull Sequence<IntRange> rangesDelimitedBy(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters,
                                                                  final int startIndex, final boolean ignoreCase, final int limit) {
         return new DelimitedRangesSequence(seq, startIndex, limit, (charSeq, currentIndex) -> {
@@ -2175,5 +2346,28 @@ public final class StringUtils {
     @NonNls
     private static @NotNull Function<? super String, String> getIndentFunction(final String indent) {
         return isEmpty(indent) ? (line -> line) : (line -> indent + line);
+    }
+
+    private static @NotNull List<String> split(final @NotNull CharSequence seq, final @NotNull String delimiter, final boolean ignoreCase,
+                                               final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
+        int currentOffset = 0;
+        int nextIndex = indexOf(seq, delimiter, currentOffset, ignoreCase);
+        if (nextIndex == -1 || limit == 1) {
+            return singletonList(seq.toString());
+        }
+        final boolean isLimited = limit > 0;
+        final int size = isLimited ? coerceAtMost(limit, 10) : 10;
+        final List<String> result = new ArrayList<>(size);
+        do {
+            result.add(substring(seq, currentOffset, nextIndex));
+            currentOffset = nextIndex + delimiter.length();
+            // Do not search for next occurrence if we're reaching limit
+            if (isLimited && result.size() == limit - 1) {
+                break;
+            }
+            nextIndex = indexOf(seq, delimiter, currentOffset, ignoreCase);
+        } while (nextIndex != -1);
+        result.add(substring(seq, currentOffset, seq.length()));
+        return result;
     }
 }

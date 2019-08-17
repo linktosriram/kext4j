@@ -3,6 +3,7 @@ package io.github.linktosriram.kext4j.sequence;
 import io.github.linktosriram.kext4j.Pair;
 import io.github.linktosriram.kext4j.range.IntRange;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
@@ -30,7 +31,7 @@ public class DelimitedRangesSequence implements Sequence<IntRange> {
     }
 
     @Override
-    public Iterator<IntRange> iterator() {
+    public @NotNull Iterator<IntRange> iterator() {
         return new Iterator<IntRange>() {
             private int nextState = -1; // -1 for unknown, 0 for done, 1 for continue
             private int currentStartIndex = coerceIn(startIndex, 0, input.length());

@@ -259,9 +259,7 @@ public final class CollectionUtils {
         return list.size() - 1;
     }
 
-    // Private Stuff
-
-    private static <T> int collectionSizeOrDefault(final Iterable<T> iterable, final int defaultValue) {
+    public static <T> int collectionSizeOrDefault(final Iterable<T> iterable, final int defaultValue) {
         return iterable instanceof Collection ? ((Collection<T>) iterable).size() : defaultValue;
     }
 }

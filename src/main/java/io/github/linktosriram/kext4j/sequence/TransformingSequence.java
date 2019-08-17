@@ -1,6 +1,7 @@
 package io.github.linktosriram.kext4j.sequence;
 
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.function.Function;
@@ -17,7 +18,7 @@ class TransformingSequence<T, R> implements Sequence<R> {
     }
 
     @Override
-    public Iterator<R> iterator() {
+    public @NotNull Iterator<R> iterator() {
         return new Iterator<R>() {
             private final Iterator<T> iterator = sequence.iterator();
 

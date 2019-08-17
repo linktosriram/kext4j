@@ -99,4 +99,9 @@ public final class SequenceUtils {
         }
         return buffer;
     }
+
+    @Contract(pure = true)
+    public static @NotNull <T> Iterable<T> asIterable(final @NotNull Sequence<T> seq) {
+        return seq::iterator;
+    }
 }

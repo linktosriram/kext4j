@@ -63,10 +63,10 @@ Currently in-progress:
 * [indexOfAny](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/index-of-any.html)
 * [indexOfFirst](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/index-of-first.html)
 * [indexOfLast](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/index-of-last.html)
-* [isBlank]()
+* [isBlank](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/is-blank.html)
 * [isEmpty](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/is-empty.html)
-* [isNotBlank]()
-* [isNotEmpty](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/is-not-blank.html)
+* [isNotBlank](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/is-not-blank.html)
+* [isNotEmpty](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/is-not-empty.html)
 * [isNullOrBlank](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/is-null-or-blank.html)
 * [isNullOrEmpty](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/is-null-or-empty.html)
 * [iterator](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/iterator.html)
@@ -116,6 +116,12 @@ Currently in-progress:
 * [replaceFirst](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/replace-first.html)
 * [replaceIndent](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/replace-indent.html)
 * [replaceIndentByMargin](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/replace-indent-by-margin.html)
+* [replaceRange](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/replace-range.html)
+* [reversed](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/reversed.html)
+* [single](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/single.html)
+* [singleOrNull](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/single-or-null.html)
+* [slice](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/slice.html)
+* [split](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/split.html)
 
 ##  Example
 

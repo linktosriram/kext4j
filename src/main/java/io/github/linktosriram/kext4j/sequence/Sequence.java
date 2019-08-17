@@ -1,8 +1,10 @@
 package io.github.linktosriram.kext4j.sequence;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Iterator;
 
 @FunctionalInterface
 public interface Sequence<T> {
-    Iterator<T> iterator();
+    @NotNull Iterator<T> iterator();
 }
