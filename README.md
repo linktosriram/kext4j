@@ -122,6 +122,20 @@ Currently in-progress:
 * [singleOrNull](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/single-or-null.html)
 * [slice](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/slice.html)
 * [split](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/split.html)
+* [splitToSequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/split-to-sequence.html)
+* [startsWith](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/starts-with.html)
+* [subSequence](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/sub-sequence.html)
+* [substring](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/substring.html)
+* [substringAfter](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/substring-after.html)
+* [substringAfterLast](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/substring-after-last.html)
+* [substringBefore](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/substring-before.html)
+* [substringBeforeLast](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/substring-before-last.html)
+* [sumBy](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/sum-by.html)
+* [sumByDouble](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/sum-by-double.html)
+* [take](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/take.html)
+* [takeLast](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/take-last.html)
+* [takeLastWhile](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/take-last-while.html)
+* [takeWhile](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.text/take-while.html)
 
 ##  Example
 

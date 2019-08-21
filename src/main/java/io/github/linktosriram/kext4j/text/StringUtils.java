@@ -270,21 +270,21 @@ public final class StringUtils {
         return first.subSequence(firstLength - i, firstLength).toString();
     }
 
-    public static boolean contains(final CharSequence first, final CharSequence second) {
+    public static boolean contains(final @NotNull CharSequence first, final @NotNull CharSequence second) {
         return contains(first, second, false);
     }
 
-    public static boolean contains(final CharSequence first, final CharSequence second, final boolean ignoreCase) {
+    public static boolean contains(final @NotNull CharSequence first, final @NotNull CharSequence second, final boolean ignoreCase) {
         return second instanceof String ?
             indexOf(first, (String) second, ignoreCase) >= 0 :
             indexOf(first, second, 0, first.length(), ignoreCase, false) >= 0;
     }
 
-    public static boolean contains(final CharSequence seq, final char ch) {
+    public static boolean contains(final @NotNull CharSequence seq, final char ch) {
         return contains(seq, ch, false);
     }
 
-    public static boolean contains(final CharSequence seq, final char ch, final boolean ignoreCase) {
+    public static boolean contains(final @NotNull CharSequence seq, final char ch, final boolean ignoreCase) {
         return indexOf(seq, ch, ignoreCase) >= 0;
     }
 
@@ -305,8 +305,7 @@ public final class StringUtils {
      * @param predicate the {@link Predicate}
      * @return the number of characters in the {@link CharSequence} that satisfy the given {@link Predicate}
      */
-    public static @Range(from = 0, to = Integer.MAX_VALUE) int count(final @NotNull CharSequence seq,
-                                                                     final @NotNull Predicate<? super Character> predicate) {
+    public static @Range(from = 0, to = Integer.MAX_VALUE) int count(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
         int count = 0;
         final int length = seq.length();
         for (int i = 0; i < length; i++) {
@@ -458,8 +457,7 @@ public final class StringUtils {
      * @param defaultValue the {@link Function} to invoke if the {@code index} is out of bounds
      * @return character at the given {@code index} or the defaultValue
      */
-    public static char elementAtOrElse(final @NotNull CharSequence seq, final int index,
-                                       final @NotNull Function<? super Integer, Character> defaultValue) {
+    public static char elementAtOrElse(final @NotNull CharSequence seq, final int index, final @NotNull Function<? super Integer, Character> defaultValue) {
         return getOrElse(seq, index, defaultValue);
     }
 
@@ -546,8 +544,7 @@ public final class StringUtils {
     }
 
     // Returns a char sequence containing only those characters from the original char sequence that match the given predicate.
-    public static @NotNull CharSequence filterIndexed(final @NotNull CharSequence seq,
-                                                      final @NotNull BiPredicate<? super Integer, ? super Character> predicate) {
+    public static @NotNull CharSequence filterIndexed(final @NotNull CharSequence seq, final @NotNull BiPredicate<? super Integer, ? super Character> predicate) {
         return filterIndexedTo(seq, new StringBuilder(), predicate);
     }
 
@@ -596,7 +593,17 @@ public final class StringUtils {
     public static @NotNull <C extends Appendable> C filterTo(final @NotNull CharSequence seq, final @NotNull C destination,
                                                              final @NotNull Predicate<? super Character> predicate) {
         final int length = seq.length();
-        return filterTo(seq, destination, length, predicate);
+        for (int i = 0; i < length; i++) {
+            final char element = seq.charAt(i);
+            if (predicate.test(element)) {
+                try {
+                    destination.append(element);
+                } catch (final IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+            }
+        }
+        return destination;
     }
 
     // Returns the first character matching the given predicate, or empty() if no such character was found.
@@ -620,10 +627,8 @@ public final class StringUtils {
 
     // Finds the first occurrence of any of the specified strings in the char sequence, starting from the specified startIndex and optionally
     // ignoring the case.
-    public static @NotNull Optional<Pair<Integer, String>> findAnyOf(final @NotNull CharSequence seq,
-                                                                     final @NotNull Collection<String> strings,
-                                                                     final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                     final boolean ignoreCase) {
+    public static @NotNull Optional<Pair<Integer, String>> findAnyOf(final @NotNull CharSequence seq, final @NotNull Collection<String> strings,
+                                                                     final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         return findAnyOf(seq, strings, startIndex, ignoreCase, false);
     }
 
@@ -636,8 +641,7 @@ public final class StringUtils {
         return findLastAnyOf(seq, strings, lastIndex(seq), false);
     }
 
-    public static @NotNull Optional<Pair<Integer, String>> findLastAnyOf(final @NotNull CharSequence seq,
-                                                                         final @NotNull Collection<String> strings,
+    public static @NotNull Optional<Pair<Integer, String>> findLastAnyOf(final @NotNull CharSequence seq, final @NotNull Collection<String> strings,
                                                                          final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex) {
         return findLastAnyOf(seq, strings, startIndex, false);
     }
@@ -649,10 +653,8 @@ public final class StringUtils {
 
     // Finds the last occurrence of any of the specified strings in the char sequence, starting from the specified startIndex and optionally ignoring
     // the case.
-    public static @NotNull Optional<Pair<Integer, String>> findLastAnyOf(final @NotNull CharSequence seq,
-                                                                         final @NotNull Collection<String> strings,
-                                                                         final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                         final boolean ignoreCase) {
+    public static @NotNull Optional<Pair<Integer, String>> findLastAnyOf(final @NotNull CharSequence seq, final @NotNull Collection<String> strings,
+                                                                         final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         return findAnyOf(seq, strings, startIndex, ignoreCase, true);
     }
 
@@ -794,8 +796,7 @@ public final class StringUtils {
     // Groups characters of the original char sequence by the key returned by the given keySelector function applied to each character and returns a
     // map where each group key is associated with a list of corresponding characters.
     // The returned map preserves the entry iteration order of the keys produced from the original char sequence.
-    public static @NotNull <K> Map<K, List<Character>> groupBy(final @NotNull CharSequence seq,
-                                                               final @NotNull Function<? super Character, K> keySelector) {
+    public static @NotNull <K> Map<K, List<Character>> groupBy(final @NotNull CharSequence seq, final @NotNull Function<? super Character, K> keySelector) {
         return groupByTo(seq, new LinkedHashMap<>(), keySelector);
     }
 
@@ -873,8 +874,7 @@ public final class StringUtils {
 
     // Returns the index within this string of the first occurrence of the specified character, starting from the specified startIndex.
     public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOf(final @NotNull CharSequence seq, final char ch,
-                                                                        final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                        final boolean ignoreCase) {
+                                                                        final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         return ignoreCase || !(seq instanceof String) ?
             indexOfAny(seq, new char[]{ch}, startIndex, ignoreCase) :
             ((String) seq).indexOf(ch, startIndex);
@@ -889,15 +889,13 @@ public final class StringUtils {
         return indexOf(seq, str, startIndex, false);
     }
 
-    public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOf(final @NotNull CharSequence seq, final @NotNull String str,
-                                                                        final boolean ignoreCase) {
+    public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOf(final @NotNull CharSequence seq, final @NotNull String str, final boolean ignoreCase) {
         return indexOf(seq, str, 0, ignoreCase);
     }
 
     // Returns the index within this char sequence of the first occurrence of the specified string, starting from the specified startIndex.
     public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOf(final @NotNull CharSequence seq, final @NotNull String str,
-                                                                        final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                        final boolean ignoreCase) {
+                                                                        final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         return ignoreCase || !(seq instanceof String) ?
             indexOf(seq, str, startIndex, seq.length(), ignoreCase, false) :
             ((String) seq).indexOf(str, startIndex);
@@ -912,16 +910,14 @@ public final class StringUtils {
         return indexOfAny(seq, chars, startIndex, false);
     }
 
-    public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOfAny(final @NotNull CharSequence seq, final @NotNull char[] chars,
-                                                                           final boolean ignoreCase) {
+    public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOfAny(final @NotNull CharSequence seq, final @NotNull char[] chars, final boolean ignoreCase) {
         return indexOfAny(seq, chars, 0, ignoreCase);
     }
 
     // Finds the index of the first occurrence of any of the specified chars in this char sequence, starting from the specified startIndex and
     // optionally ignoring the case.
     public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOfAny(final @NotNull CharSequence seq, final @NotNull char[] chars,
-                                                                           final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                           final boolean ignoreCase) {
+                                                                           final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         if (!ignoreCase && chars.length == 1 && seq instanceof String) {
             final char single = ArrayUtils.single(chars);
             return ((String) seq).indexOf(single, startIndex);
@@ -955,8 +951,7 @@ public final class StringUtils {
     // Finds the index of the first occurrence of any of the specified strings in this char sequence, starting from the specified startIndex and
     // optionally ignoring the case.
     public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOfAny(final @NotNull CharSequence seq, final @NotNull Collection<String> strings,
-                                                                           final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                           final boolean ignoreCase) {
+                                                                           final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         return findAnyOf(seq, strings, startIndex, ignoreCase, false)
             .map(Pair::getFirst)
             .orElse(-1);
@@ -1064,15 +1059,13 @@ public final class StringUtils {
         return lastIndexOf(seq, ch, startIndex, false);
     }
 
-    public static @Range(from = -1, to = Integer.MAX_VALUE) int lastIndexOf(final @NotNull CharSequence seq, final char ch,
-                                                                            final boolean ignoreCase) {
+    public static @Range(from = -1, to = Integer.MAX_VALUE) int lastIndexOf(final @NotNull CharSequence seq, final char ch, final boolean ignoreCase) {
         return lastIndexOf(seq, ch, lastIndex(seq), ignoreCase);
     }
 
     // Returns the index within this char sequence of the last occurrence of the specified character, starting from the specified startIndex.
     public static @Range(from = -1, to = Integer.MAX_VALUE) int lastIndexOf(final @NotNull CharSequence seq, final char ch,
-                                                                            final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                            final boolean ignoreCase) {
+                                                                            final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         return ignoreCase || !(seq instanceof String) ?
             lastIndexOfAny(seq, new char[]{ch}, startIndex, ignoreCase) :
             ((String) seq).lastIndexOf(ch, startIndex);
@@ -1087,15 +1080,13 @@ public final class StringUtils {
         return lastIndexOf(seq, str, startIndex, false);
     }
 
-    public static @Range(from = -1, to = Integer.MAX_VALUE) int lastIndexOf(final @NotNull CharSequence seq, final @NotNull String str,
-                                                                            final boolean ignoreCase) {
+    public static @Range(from = -1, to = Integer.MAX_VALUE) int lastIndexOf(final @NotNull CharSequence seq, final @NotNull String str, final boolean ignoreCase) {
         return lastIndexOf(seq, str, lastIndex(seq), ignoreCase);
     }
 
     // Returns the index within this char sequence of the last occurrence of the specified string, starting from the specified startIndex.
     public static @Range(from = -1, to = Integer.MAX_VALUE) int lastIndexOf(final @NotNull CharSequence seq, final @NotNull String str,
-                                                                            final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
-                                                                            final boolean ignoreCase) {
+                                                                            final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
         return ignoreCase || !(seq instanceof String) ?
             indexOf(seq, str, startIndex, 0, ignoreCase, true) :
             ((String) seq).lastIndexOf(str, startIndex);
@@ -1190,15 +1181,13 @@ public final class StringUtils {
     }
 
     // Returns a list containing the results of applying the given transform function to each character and its index in the original char sequence.
-    public static @NotNull <R> List<R> mapIndexed(final @NotNull CharSequence seq,
-                                                  final @NotNull BiFunction<? super Integer, ? super Character, R> transform) {
+    public static @NotNull <R> List<R> mapIndexed(final @NotNull CharSequence seq, final @NotNull BiFunction<? super Integer, ? super Character, R> transform) {
         return mapIndexedTo(seq, new ArrayList<>(seq.length()), transform);
     }
 
     // Returns a list containing only the non-null results of applying the given transform function to each character and its index in the original
     // char sequence.
-    public static @NotNull <R> List<R> mapIndexedNotNull(final @NotNull CharSequence seq,
-                                                         final @NotNull BiFunction<? super Integer, ? super Character, R> transform) {
+    public static @NotNull <R> List<R> mapIndexedNotNull(final @NotNull CharSequence seq, final @NotNull BiFunction<? super Integer, ? super Character, R> transform) {
         return mapIndexedNotNullTo(seq, new ArrayList<>(), transform);
     }
 
@@ -1384,8 +1373,7 @@ public final class StringUtils {
     }
 
     // Returns a char sequence with content of this char sequence padded at the end to the specified length with the specified character or space.
-    public static @NotNull CharSequence padEnd(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int length,
-                                               final char padChar) {
+    public static @NotNull CharSequence padEnd(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int length, final char padChar) {
         final int seqLength = seq.length();
         if (length <= seqLength) {
             return seq.subSequence(0, seqLength);
@@ -1406,8 +1394,7 @@ public final class StringUtils {
     }
 
     // Pads the string to the specified length at the end with the specified character or space.
-    public static @NotNull String padEnd(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int length,
-                                         final char padChar) {
+    public static @NotNull String padEnd(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int length, final char padChar) {
         return padEnd((CharSequence) str, length, padChar).toString();
     }
 
@@ -1416,8 +1403,7 @@ public final class StringUtils {
     }
 
     // Returns a char sequence with content of this char sequence padded at the beginning to the specified length with the specified character or space.
-    public static @NotNull CharSequence padStart(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int length,
-                                                 final char padChar) {
+    public static @NotNull CharSequence padStart(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int length, final char padChar) {
         final int seqLength = seq.length();
         if (length <= seqLength) {
             return seq.subSequence(0, seqLength);
@@ -1437,16 +1423,14 @@ public final class StringUtils {
     }
 
     // Pads the string to the specified length at the beginning with the specified character or space.
-    public static @NotNull String padStart(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int length,
-                                           final char padChar) {
+    public static @NotNull String padStart(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int length, final char padChar) {
         return padStart((CharSequence) str, length, padChar).toString();
     }
 
     // Splits the original char sequence into pair of char sequences, where first char sequence contains characters for which predicate yielded true, while second char
     // sequence contains characters for which predicate yielded false.
     @Contract("_, _ -> new")
-    public static @NotNull Pair<CharSequence, CharSequence> partition(final @NotNull CharSequence seq,
-                                                                      final @NotNull Predicate<? super Character> predicate) {
+    public static @NotNull Pair<CharSequence, CharSequence> partition(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
         final StringBuilder first = new StringBuilder();
         final StringBuilder second = new StringBuilder();
 
@@ -1573,29 +1557,28 @@ public final class StringUtils {
         return accumulator;
     }
 
-    public static boolean regionMatches(final CharSequence first, final int firstOffset, final CharSequence second, final int secondOffset, final int length) {
+    public static boolean regionMatches(final @NotNull CharSequence first, final int firstOffset, final @NotNull CharSequence second, final int secondOffset,
+                                        final int length) {
         return regionMatches(first, firstOffset, second, secondOffset, length, false);
     }
 
     // Returns true if the specified range in first char sequence is equal to the specified range in second char sequence.
-    public static boolean regionMatches(final CharSequence first, final int firstOffset, final CharSequence second, final int secondOffset, final int length,
-                                        final boolean ignoreCase) {
+    public static boolean regionMatches(final @NotNull CharSequence first, final int firstOffset, final @NotNull CharSequence second, final int secondOffset,
+                                        final int length, final boolean ignoreCase) {
         return first instanceof String && second instanceof String ?
             regionMatches((String) first, firstOffset, (String) second, secondOffset, length, ignoreCase) :
             regionMatchesImpl(first, firstOffset, second, secondOffset, length, ignoreCase);
     }
 
     @Contract(pure = true)
-    public static boolean regionMatches(final String first, final int firstOffset, final String second,
-                                        final int secondOffset, final int length) {
+    public static boolean regionMatches(final @NotNull String first, final int firstOffset, final @NotNull String second, final int secondOffset, final int length) {
         return regionMatches(first, firstOffset, second, secondOffset, length, false);
     }
 
     // Returns true if the specified range in first string is equal to the specified range in second string.
     @Contract(pure = true)
-    public static boolean regionMatches(final String first, final int firstOffset, final String second, final int secondOffset,
-                                        final int length,
-                                        final boolean ignoreCase) {
+    public static boolean regionMatches(final @NotNull String first, final int firstOffset, final @NotNull String second, final int secondOffset,
+                                        final int length, final boolean ignoreCase) {
         return ignoreCase ? first.regionMatches(true, firstOffset, second, secondOffset, length) : first.regionMatches(firstOffset, second, secondOffset, length);
     }
 
@@ -2023,32 +2006,6 @@ public final class StringUtils {
         return CollectionUtils.map(iterable, range -> substring(seq, range));
     }
 
-    //////
-
-    public static CharSequence subSequence(final CharSequence seq, final IntRange range) {
-        return seq.subSequence(range.getStart(), range.getEndInclusive() + 1);
-    }
-
-    public static boolean startsWith(final CharSequence seq, final CharSequence prefix, final int startIndex) {
-        return startsWith(seq, prefix, startIndex, false);
-    }
-
-    public static boolean startsWith(final CharSequence seq, final CharSequence prefix, final int startIndex, final boolean ignoreCase) {
-        return !ignoreCase && seq instanceof String && prefix instanceof String ?
-            ((String) seq).startsWith((String) prefix, startIndex) :
-            regionMatchesImpl(seq, startIndex, prefix, 0, prefix.length(), ignoreCase);
-    }
-
-    public static boolean startsWith(final CharSequence seq, final CharSequence prefix) {
-        return startsWith(seq, prefix, false);
-    }
-
-    public static boolean startsWith(final CharSequence seq, final CharSequence prefix, final boolean ignoreCase) {
-        return !ignoreCase && seq instanceof String && prefix instanceof String ?
-            ((String) seq).startsWith((String) prefix) :
-            regionMatchesImpl(seq, 0, prefix, 0, prefix.length(), ignoreCase);
-    }
-
     public static @NotNull Sequence<String> splitToSequence(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters) {
         return splitToSequence(seq, delimiters, false, 0);
     }
@@ -2059,48 +2016,253 @@ public final class StringUtils {
     }
 
     public static @NotNull Sequence<String> splitToSequence(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters,
-                                                            final int limit) {
+                                                            final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
         return splitToSequence(seq, delimiters, false, limit);
     }
 
     public static @NotNull Sequence<String> splitToSequence(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters,
-                                                            final boolean ignoreCase, final int limit) {
+                                                            final boolean ignoreCase, final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
         return SequenceUtils.map(rangesDelimitedBy(seq, delimiters), range -> substring(seq, range));
     }
 
-    public static Sequence<String> splitToSequence(final CharSequence seq, final char[] delimiters, final boolean ignoreCase) {
-        return SequenceUtils.map(rangesDelimitedBy(seq, delimiters, ignoreCase, 0), range -> substring(seq, range));
+    public static @NotNull Sequence<String> splitToSequence(final @NotNull CharSequence seq, final @NotNull char[] delimiters) {
+        return splitToSequence(seq, delimiters, false, 0);
     }
 
-    public static String substring(final CharSequence seq, final IntRange range) {
-        return seq.subSequence(range.getStart(), range.getEndInclusive() + 1).toString();
+    public static @NotNull Sequence<String> splitToSequence(final @NotNull CharSequence seq, final @NotNull char[] delimiters, final boolean ignoreCase) {
+        return splitToSequence(seq, delimiters, ignoreCase, 0);
     }
 
-    public static String substring(final String str, final IntRange range) {
+    public static @NotNull Sequence<String> splitToSequence(final @NotNull CharSequence seq, final @NotNull char[] delimiters,
+                                                            final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
+        return splitToSequence(seq, delimiters, false, limit);
+    }
+
+    public static @NotNull Sequence<String> splitToSequence(final @NotNull CharSequence seq, final @NotNull char[] delimiters, final boolean ignoreCase,
+                                                            final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
+        return SequenceUtils.map(rangesDelimitedBy(seq, delimiters, ignoreCase, limit), range -> substring(seq, range));
+    }
+
+    public static boolean startsWith(final @NotNull String str, final @NotNull String prefix) {
+        return startsWith(str, prefix, false);
+    }
+
+    public static boolean startsWith(final @NotNull String str, final @NotNull String prefix, final boolean ignoreCase) {
+        return ignoreCase ? regionMatches(str, 0, prefix, 0, prefix.length(), true) : str.startsWith(prefix);
+    }
+
+    public static boolean startsWith(final @NotNull String str, final @NotNull String prefix, final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex) {
+        return startsWith(str, prefix, startIndex, false);
+    }
+
+    public static boolean startsWith(final @NotNull String str, final @NotNull String prefix, final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
+                                     final boolean ignoreCase) {
+        return ignoreCase ? regionMatches(str, startIndex, prefix, 0, prefix.length(), true) : str.startsWith(prefix, startIndex);
+    }
+
+    public static boolean startsWith(final @NotNull CharSequence seq, final char ch) {
+        return startsWith(seq, ch, false);
+    }
+
+    public static boolean startsWith(final @NotNull CharSequence seq, final char ch, final boolean ignoreCase) {
+        return seq.length() > 0 && CharUtils.equals(seq.charAt(0), ch, ignoreCase);
+    }
+
+    public static boolean startsWith(final @NotNull CharSequence seq, final CharSequence prefix) {
+        return startsWith(seq, prefix, false);
+    }
+
+    public static boolean startsWith(final @NotNull CharSequence seq, final @NotNull CharSequence prefix, final boolean ignoreCase) {
+        return !ignoreCase && seq instanceof String && prefix instanceof String ?
+            ((String) seq).startsWith((String) prefix) :
+            regionMatchesImpl(seq, 0, prefix, 0, prefix.length(), ignoreCase);
+    }
+
+    public static boolean startsWith(final @NotNull CharSequence seq, final @NotNull CharSequence prefix,
+                                     final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex) {
+        return startsWith(seq, prefix, startIndex, false);
+    }
+
+    public static boolean startsWith(final @NotNull CharSequence seq, final @NotNull CharSequence prefix,
+                                     final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase) {
+        return !ignoreCase && seq instanceof String && prefix instanceof String ?
+            ((String) seq).startsWith((String) prefix, startIndex) :
+            regionMatchesImpl(seq, startIndex, prefix, 0, prefix.length(), ignoreCase);
+    }
+
+    public static @NotNull CharSequence subSequence(final @NotNull CharSequence seq, final @NotNull IntRange range) {
+        return seq.subSequence(range.getStart(), range.getEndInclusive() + 1);
+    }
+
+    public static @NotNull String substring(final @NotNull String str, final @NotNull IntRange range) {
         return substring(str, range.getStart(), range.getEndInclusive() + 1);
     }
 
-    public static String substring(final CharSequence seq, final int startIndex) {
+    public static @NotNull String substring(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex) {
         return substring(seq, startIndex, seq.length());
     }
 
-    public static String substring(final CharSequence seq, final int startIndex, final int endIndex) {
+    public static @NotNull String substring(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final int endIndex) {
         return seq.subSequence(startIndex, endIndex).toString();
     }
 
-    public static CharSequence take(final CharSequence seq, @NonNls final int n) {
-        if (n < 0) {
-            throw new IllegalArgumentException("Requested character count " + n + " is less than zero.");
+    public static @NotNull String substring(final @NotNull CharSequence seq, final @NotNull IntRange range) {
+        return seq.subSequence(range.getStart(), range.getEndInclusive() + 1).toString();
+    }
+
+    public static @NotNull String substringAfter(final @NotNull String str, final char delimiter) {
+        return substringAfter(str, delimiter, str);
+    }
+
+    public static @NotNull String substringAfter(final @NotNull String str, final char delimiter, final @NotNull String missingDelimiterValue) {
+        final int index = indexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, index + 1, str.length());
+    }
+
+    public static @NotNull String substringAfter(final @NotNull String str, final @NotNull String delimiter) {
+        return substringAfter(str, delimiter, str);
+    }
+
+    public static @NotNull String substringAfter(final @NotNull String str, final @NotNull String delimiter, final @NotNull String missingDelimiterValue) {
+        final int index = indexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, index + delimiter.length(), str.length());
+    }
+
+    public static @NotNull String substringAfterLast(final @NotNull String str, final char delimiter) {
+        return substringAfterLast(str, delimiter, str);
+    }
+
+    public static @NotNull String substringAfterLast(final @NotNull String str, final char delimiter, final @NotNull String missingDelimiterValue) {
+        final int index = lastIndexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, index + 1, str.length());
+    }
+
+    public static @NotNull String substringAfterLast(final @NotNull String str, final @NotNull String delimiter) {
+        return substringAfterLast(str, delimiter, str);
+    }
+
+    public static @NotNull String substringAfterLast(final @NotNull String str, final @NotNull String delimiter, final @NotNull String missingDelimiterValue) {
+        final int index = lastIndexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, index + delimiter.length(), str.length());
+    }
+
+    public static @NotNull String substringBefore(final @NotNull String str, final char delimiter) {
+        return substringBefore(str, delimiter, str);
+    }
+
+    public static @NotNull String substringBefore(final @NotNull String str, final char delimiter, final @NotNull String missingDelimiterValue) {
+        final int index = indexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, 0, index);
+    }
+
+    public static @NotNull String substringBefore(final @NotNull String str, final @NotNull String delimiter) {
+        return substringBefore(str, delimiter, str);
+    }
+
+    public static @NotNull String substringBefore(final @NotNull String str, final @NotNull String delimiter, final @NotNull String missingDelimiterValue) {
+        final int index = indexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, 0, index);
+    }
+
+    public static @NotNull String substringBeforeLast(final @NotNull String str, final char delimiter) {
+        return substringBeforeLast(str, delimiter, str);
+    }
+
+    public static @NotNull String substringBeforeLast(final @NotNull String str, final char delimiter, final @NotNull String missingDelimiterValue) {
+        final int index = lastIndexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, 0, index);
+    }
+
+    public static @NotNull String substringBeforeLast(final @NotNull String str, final @NotNull String delimiter) {
+        return substringBeforeLast(str, delimiter, str);
+    }
+
+    public static String substringBeforeLast(final String str, final String delimiter, final String missingDelimiterValue) {
+        final int index = lastIndexOf(str, delimiter);
+        return index == -1 ? missingDelimiterValue : substring(str, 0, index);
+    }
+
+    public static @Range(from = 0, to = Integer.MAX_VALUE) int sumBy(final @NotNull CharSequence seq, final @NotNull Function<? super Character, Integer> selector) {
+        int sum = 0;
+        final int length = seq.length();
+        for (int i = 0; i < length; i++) {
+            final char element = seq.charAt(i);
+            sum += selector.apply(element);
         }
+        return sum;
+    }
+
+    public static double sumByDouble(final @NotNull CharSequence seq, final @NotNull Function<? super Character, Double> selector) {
+        double sum = 0.0;
+        final int length = seq.length();
+        for (int i = 0; i < length; i++) {
+            final char element = seq.charAt(i);
+            sum += selector.apply(element);
+        }
+        return sum;
+    }
+
+    public static @NotNull CharSequence take(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int n) {
         return seq.subSequence(0, coerceAtMost(n, seq.length()));
     }
 
-    public static String take(final String str, @NonNls final int n) {
-        if (n < 0) {
-            throw new IllegalArgumentException("Requested character count " + n + " is less than zero.");
-        }
+    public static @NotNull String take(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int n) {
         return str.substring(0, coerceAtMost(n, str.length()));
     }
+
+    public static @NotNull CharSequence takeLast(final @NotNull CharSequence seq, final @Range(from = 0, to = Integer.MAX_VALUE) int n) {
+        final int length = seq.length();
+        return seq.subSequence(length - coerceAtMost(n, length), length);
+    }
+
+    public static @NotNull String takeLast(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int n) {
+        final int length = str.length();
+        return str.substring(length - coerceAtMost(n, length));
+    }
+
+    public static @NotNull CharSequence takeLastWhile(final @NotNull CharSequence seq, final @NotNull Predicate<Character> predicate) {
+        final Predicate<Character> negated = predicate.negate();
+        for (int i = lastIndex(seq); i >= 0; i--) {
+            if (negated.test(seq.charAt(i))) {
+                return seq.subSequence(i + 1, seq.length());
+            }
+        }
+        return seq.subSequence(0, seq.length());
+    }
+
+    public static @NotNull String takeLastWhile(final @NotNull String str, final @NotNull Predicate<Character> predicate) {
+        final Predicate<Character> negated = predicate.negate();
+        for (int i = lastIndex(str); i >= 0; i--) {
+            if (negated.test(str.charAt(i))) {
+                return str.substring(i + 1);
+            }
+        }
+        return str;
+    }
+
+    public static @NotNull CharSequence takeWhile(final @NotNull CharSequence seq, final @NotNull Predicate<Character> predicate) {
+        final Predicate<Character> negated = predicate.negate();
+        final int length = seq.length();
+        for (int i = 0; i < length; i++) {
+            if (negated.test(seq.charAt(i))) {
+                return seq.subSequence(0, i);
+            }
+        }
+        return seq.subSequence(0, length);
+    }
+
+    public static @NotNull String takeWhile(final @NotNull String str, final @NotNull Predicate<Character> predicate) {
+        final Predicate<Character> negated = predicate.negate();
+        final int length = str.length();
+        for (int i = 0; i < length; i++) {
+            if (negated.test(str.charAt(i))) {
+                return str.substring(0, i);
+            }
+        }
+        return str;
+    }
+
+    //////
 
     @Contract(pure = true)
     public static @NotNull byte[] toByteArray(final @NotNull String str) {
@@ -2177,22 +2339,6 @@ public final class StringUtils {
             }
         }
         return true;
-    }
-
-    @Contract("_, _, _, _ -> param2")
-    private static @NotNull <C extends Appendable> C filterTo(final @NotNull CharSequence seq, final @NotNull C destination, final int length,
-                                                              final @NotNull Predicate<? super Character> predicate) {
-        for (int i = 0; i < length; i++) {
-            final char element = seq.charAt(i);
-            if (predicate.test(element)) {
-                try {
-                    destination.append(element);
-                } catch (final IOException e) {
-                    throw new UncheckedIOException(e);
-                }
-            }
-        }
-        return destination;
     }
 
     private static Optional<Pair<Integer, String>> findAnyOf(final CharSequence seq, final Collection<String> strings, final int startIndex,
