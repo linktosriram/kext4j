@@ -1,6 +1,7 @@
 package io.github.linktosriram.kext4j.text;
 
 import io.github.linktosriram.kext4j.Pair;
+import io.github.linktosriram.kext4j.Preconditions;
 import io.github.linktosriram.kext4j.collection.ArrayUtils;
 import io.github.linktosriram.kext4j.collection.CharIterator;
 import io.github.linktosriram.kext4j.collection.CollectionUtils;
@@ -9,6 +10,7 @@ import io.github.linktosriram.kext4j.range.IntRange;
 import io.github.linktosriram.kext4j.sequence.DelimitedRangesSequence;
 import io.github.linktosriram.kext4j.sequence.Sequence;
 import io.github.linktosriram.kext4j.sequence.SequenceUtils;
+import io.github.linktosriram.kext4j.text.regex.Regex;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -19,17 +21,25 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.UncheckedIOException;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.MathContext;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -37,9 +47,13 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
+import static io.github.linktosriram.kext4j.collection.MapUtils.mapCapacity;
 import static io.github.linktosriram.kext4j.range.RangeUtils.coerceAtLeast;
 import static io.github.linktosriram.kext4j.range.RangeUtils.coerceAtMost;
+import static java.lang.Character.MAX_RADIX;
+import static java.lang.Character.MIN_RADIX;
 import static java.lang.Character.isHighSurrogate;
 import static java.lang.Character.isLowSurrogate;
 import static java.lang.Character.isLowerCase;
@@ -47,7 +61,11 @@ import static java.lang.Character.isUpperCase;
 import static java.lang.Character.isWhitespace;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
@@ -783,8 +801,7 @@ public final class StringUtils {
     }
 
     // Returns a character at the given index or the result of calling the defaultValue function if the index is out of bounds of this char sequence.
-    public static @NotNull Character getOrElse(final @NotNull CharSequence seq, final int index,
-                                               final @NotNull Function<? super Integer, Character> defaultValue) {
+    public static @NotNull Character getOrElse(final @NotNull CharSequence seq, final int index, final @NotNull Function<? super Integer, Character> defaultValue) {
         return index >= 0 && index <= lastIndex(seq) ? seq.charAt(index) : defaultValue.apply(index);
     }
 
@@ -2220,8 +2237,8 @@ public final class StringUtils {
         return str.substring(length - coerceAtMost(n, length));
     }
 
-    public static @NotNull CharSequence takeLastWhile(final @NotNull CharSequence seq, final @NotNull Predicate<Character> predicate) {
-        final Predicate<Character> negated = predicate.negate();
+    public static @NotNull CharSequence takeLastWhile(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
+        final Predicate<? super Character> negated = predicate.negate();
         for (int i = lastIndex(seq); i >= 0; i--) {
             if (negated.test(seq.charAt(i))) {
                 return seq.subSequence(i + 1, seq.length());
@@ -2230,8 +2247,8 @@ public final class StringUtils {
         return seq.subSequence(0, seq.length());
     }
 
-    public static @NotNull String takeLastWhile(final @NotNull String str, final @NotNull Predicate<Character> predicate) {
-        final Predicate<Character> negated = predicate.negate();
+    public static @NotNull String takeLastWhile(final @NotNull String str, final @NotNull Predicate<? super Character> predicate) {
+        final Predicate<? super Character> negated = predicate.negate();
         for (int i = lastIndex(str); i >= 0; i--) {
             if (negated.test(str.charAt(i))) {
                 return str.substring(i + 1);
@@ -2240,8 +2257,8 @@ public final class StringUtils {
         return str;
     }
 
-    public static @NotNull CharSequence takeWhile(final @NotNull CharSequence seq, final @NotNull Predicate<Character> predicate) {
-        final Predicate<Character> negated = predicate.negate();
+    public static @NotNull CharSequence takeWhile(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
+        final Predicate<? super Character> negated = predicate.negate();
         final int length = seq.length();
         for (int i = 0; i < length; i++) {
             if (negated.test(seq.charAt(i))) {
@@ -2251,8 +2268,8 @@ public final class StringUtils {
         return seq.subSequence(0, length);
     }
 
-    public static @NotNull String takeWhile(final @NotNull String str, final @NotNull Predicate<Character> predicate) {
-        final Predicate<Character> negated = predicate.negate();
+    public static @NotNull String takeWhile(final @NotNull String str, final @NotNull Predicate<? super Character> predicate) {
+        final Predicate<? super Character> negated = predicate.negate();
         final int length = str.length();
         for (int i = 0; i < length; i++) {
             if (negated.test(str.charAt(i))) {
@@ -2262,7 +2279,59 @@ public final class StringUtils {
         return str;
     }
 
-    //////
+    @Contract("_ -> new")
+    public static @NotNull BigDecimal toBigDecimal(final @NotNull String str) {
+        return new BigDecimal(str);
+    }
+
+    @Contract("_, _ -> new")
+    public static @NotNull BigDecimal toBigDecimal(final @NotNull String str, final @NotNull MathContext mathContext) {
+        return new BigDecimal(str, mathContext);
+    }
+
+    public static @Nullable BigDecimal toBigDecimalOrNull(final @NotNull String str) {
+        return screenFloatValue(str, StringUtils::toBigDecimal);
+    }
+
+    public static @Nullable BigDecimal toBigDecimalOrNull(final @NotNull String str, final @NotNull MathContext mathContext) {
+        return screenFloatValue(str, it -> toBigDecimal(it, mathContext));
+    }
+
+    @Contract("_ -> new")
+    public static @NotNull BigInteger toBigInteger(final @NotNull String str) {
+        return new BigInteger(str);
+    }
+
+    @Contract("_, _ -> new")
+    public static @NotNull BigInteger toBigInteger(final @NotNull String str, final @Range(from = MIN_RADIX, to = MAX_RADIX) int radix) {
+        return new BigInteger(str, checkRadix(radix));
+    }
+
+    public static @Nullable BigInteger toBigIntegerOrNull(final @NotNull String str) {
+        return toBigIntegerOrNull(str, 10);
+    }
+
+    public static @Nullable BigInteger toBigIntegerOrNull(final @NotNull String str, final @Range(from = MIN_RADIX, to = MAX_RADIX) int radix) {
+        checkRadix(radix);
+        final int length = str.length();
+        switch (length) {
+            case 0:
+                return null;
+            case 1:
+                if (digitOf(str.charAt(0), radix) < 0) {
+                    return null;
+                }
+                break;
+            default:
+                final int start = str.charAt(0) == '-' ? 1 : 0;
+                for (int i = start; i < length; i++) {
+                    if (digitOf(str.charAt(i), radix) < 0) {
+                        return null;
+                    }
+                }
+        }
+        return toBigInteger(str, radix);
+    }
 
     @Contract(pure = true)
     public static @NotNull byte[] toByteArray(final @NotNull String str) {
@@ -2274,26 +2343,368 @@ public final class StringUtils {
         return str.getBytes(charset);
     }
 
-    public static List<String> windowed(final CharSequence seq, final int size) {
+    public static @Nullable Byte toByteOrNull(final @NotNull String str) {
+        return toByteOrNull(str, 10);
+    }
+
+    public static @Nullable Byte toByteOrNull(final @NotNull String str, final @Range(from = MIN_RADIX, to = MAX_RADIX) int radix) {
+        final Integer integer = toIntOrNull(str, radix);
+        if (integer == null) {
+            return null;
+        }
+        if (integer < Byte.MIN_VALUE || integer > Byte.MAX_VALUE) {
+            return null;
+        }
+        return (byte) integer.intValue();
+    }
+
+    // Returns a CharArray containing characters of this string.
+    @Contract(pure = true)
+    public static @NotNull char[] toCharArray(final @NotNull String str) {
+        return str.toCharArray();
+    }
+
+    public static @NotNull char[] toCharArray(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex) {
+        return toCharArray(str, startIndex, str.length());
+    }
+
+    // Returns a CharArray containing characters of this string or its substring.
+    public static @NotNull char[] toCharArray(final @NotNull String str, final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int endIndex) {
+        return toCharArray(str, new char[endIndex - startIndex], 0, startIndex, endIndex);
+    }
+
+    public static @NotNull char[] toCharArray(final @NotNull String str, final @NotNull char[] destination) {
+        return toCharArray(str, destination, 0, 0, str.length());
+    }
+
+    // Copies characters from this string into the destination character array and returns that array.
+    @Contract("_, _, _, _, _ -> param2")
+    public static @NotNull char[] toCharArray(final @NotNull String str, final @NotNull char[] destination,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int destinationOffset,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
+                                              final @Range(from = 0, to = Integer.MAX_VALUE) int endIndex) {
+        str.getChars(startIndex, endIndex, destination, destinationOffset);
+        return destination;
+    }
+
+    @Contract("_, _ -> param2")
+    public static @NotNull <C extends Collection<Character>> C toCollection(final @NotNull CharSequence seq, final @NotNull C destination) {
+        final int length = seq.length();
+        for (int i = 0; i < length; i++) {
+            destination.add(seq.charAt(i));
+        }
+        return destination;
+    }
+
+    // Returns a HashSet of all characters.
+    public static @NotNull HashSet<Character> toHashSet(final CharSequence seq) {
+        return toCollection(seq, new HashSet<>(mapCapacity(seq.length())));
+    }
+
+    // Parses the string as an Integer number and returns the result or null if the string is not a valid representation of a number.
+    public static @Nullable Integer toIntOrNull(final @NotNull String str) {
+        return toIntOrNull(str, 10);
+    }
+
+    // Parses the string as an Integer number and returns the result or null if the string is not a valid representation of a number.
+    public static @Nullable Integer toIntOrNull(final @NotNull String str, final @Range(from = MIN_RADIX, to = MAX_RADIX) int radix) {
+        checkRadix(radix);
+        final int length = str.length();
+        if (length == 0) {
+            return null;
+        }
+        final int start;
+        final boolean isNegative;
+        final int limit;
+        final char firstChar = str.charAt(0);
+        if (firstChar < '0') {  // Possible leading sign
+            if (length == 1) {
+                return null;    // non-digit (possible sign) only, no digits after
+            }
+            start = 1;
+            if (firstChar == '-') {
+                isNegative = true;
+                limit = Integer.MIN_VALUE;
+            } else if (firstChar == '+') {
+                isNegative = false;
+                limit = -Integer.MAX_VALUE;
+            } else {
+                return null;
+            }
+        } else {
+            start = 0;
+            isNegative = false;
+            limit = -Integer.MAX_VALUE;
+        }
+        final int limitBeforeMul = limit / radix;
+        int result = 0;
+        for (int i = start; i < length; i++) {
+            final int digit = digitOf(str.charAt(i), radix);
+            if (digit < 0) {
+                return null;
+            }
+            if (result < limitBeforeMul) {
+                return null;
+            }
+            result *= radix;
+            if (result < limit + digit) {
+                return null;
+            }
+            result -= digit;
+        }
+        return isNegative ? result : -result;
+    }
+
+    public static @NotNull List<Character> toList(final @NotNull CharSequence seq) {
+        switch (seq.length()) {
+            case 0:
+                return emptyList();
+            case 1:
+                return singletonList(seq.charAt(0));
+            default:
+                return unmodifiableList(toMutableList(seq));
+        }
+    }
+
+    public static @Nullable Long toLongOrNull(final @NotNull String str) {
+        return toLongOrNull(str, 10);
+    }
+
+    public static @Nullable Long toLongOrNull(final @NotNull String str, final @Range(from = MIN_RADIX, to = MAX_RADIX) int radix) {
+        checkRadix(radix);
+        final int length = str.length();
+        if (length == 0) {
+            return null;
+        }
+        final int start;
+        final boolean isNegative;
+        final long limit;
+        final char firstChar = str.charAt(0);
+        if (firstChar < '0') {  // Possible leading sign
+            if (length == 1) {
+                return null;    // non-digit (possible sign) only, no digits after
+            }
+            start = 1;
+            if (firstChar == '-') {
+                isNegative = true;
+                limit = Long.MIN_VALUE;
+            } else if (firstChar == '+') {
+                isNegative = false;
+                limit = -Long.MAX_VALUE;
+            } else {
+                return null;
+            }
+        } else {
+            start = 0;
+            isNegative = false;
+            limit = -Long.MAX_VALUE;
+        }
+        final long limitBeforeMul = limit / radix;
+        long result = 0;
+        for (int i = start; i < length; i++) {
+            final int digit = digitOf(str.charAt(i), radix);
+            if (digit < 0) {
+                return null;
+            }
+            if (result < limitBeforeMul) {
+                return null;
+            }
+            result *= radix;
+            if (result < limit + digit) {
+                return null;
+            }
+            result -= digit;
+        }
+        return isNegative ? result : -result;
+    }
+
+    public static @NotNull List<Character> toMutableList(final @NotNull CharSequence seq) {
+        return toCollection(seq, new ArrayList<>(seq.length()));
+    }
+
+    public static @NotNull Pattern toPattern(final @NotNull String str) {
+        return toPattern(str, 0);
+    }
+
+    public static @NotNull Pattern toPattern(final @NotNull String str, final int flags) {
+        return Pattern.compile(str, flags);
+    }
+
+    public static @NotNull Set<Character> toSet(final @NotNull CharSequence seq) {
+        final int length = seq.length();
+        switch (length) {
+            case 0:
+                return emptySet();
+            case 1:
+                return singleton(seq.charAt(0));
+            default:
+                return unmodifiableSet(toCollection(seq, new LinkedHashSet<>(mapCapacity(length))));
+        }
+    }
+
+    public static @Nullable Short toShortOrNull(final @NotNull String str) {
+        return toShortOrNull(str, 10);
+    }
+
+    public static @Nullable Short toShortOrNull(final @NotNull String str, final @Range(from = MIN_RADIX, to = MAX_RADIX) int radix) {
+        final Integer integer = toIntOrNull(str, radix);
+        if (integer == null) {
+            return null;
+        }
+        if (integer < Short.MIN_VALUE || integer > Short.MAX_VALUE) {
+            return null;
+        }
+        return (short) integer.intValue();
+    }
+
+    public static @NotNull SortedSet<Character> toSortedSet(final @NotNull CharSequence seq) {
+        return toCollection(seq, new TreeSet<>());
+    }
+
+    public static @NotNull CharSequence trim(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
+        int startIndex = 0;
+        int endIndex = seq.length() - 1;
+        boolean startFound = false;
+
+        while (startIndex <= endIndex) {
+            final int index = startFound ? endIndex : startIndex;
+            final boolean match = predicate.test(seq.charAt(index));
+            if (startFound) {
+                if (match) {
+                    endIndex -= 1;
+                } else {
+                    break;
+                }
+            } else {
+                if (match) {
+                    startIndex += 1;
+                } else {
+                    startFound = true;
+                }
+            }
+        }
+        return seq.subSequence(startIndex, endIndex + 1);
+    }
+
+    public static @NotNull String trim(final @NotNull String str, final @NotNull Predicate<? super Character> predicate) {
+        return trim((CharSequence) str, predicate).toString();
+    }
+
+    public static @NotNull CharSequence trim(final @NotNull CharSequence seq, final @NotNull char... chars) {
+        return trim(seq, e -> ArrayUtils.contains(chars, e));
+    }
+
+    public static @NotNull String trim(final @NotNull String str, final @NotNull char... chars) {
+        return trim(str, e -> ArrayUtils.contains(chars, e));
+    }
+
+    public static @NotNull CharSequence trim(final @NotNull CharSequence seq) {
+        return trim(seq, Character::isWhitespace);
+    }
+
+    public static @NotNull String trim(final @NotNull String str) {
+        return trim((CharSequence) str).toString();
+    }
+
+    public static @NotNull CharSequence trimEnd(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
+        final Predicate<? super Character> negated = predicate.negate();
+        for (int i = lastIndex(seq); i >= 0; i--) {
+            final char element = seq.charAt(i);
+            if (negated.test(element)) {
+                return seq.subSequence(0, i + 1);
+            }
+        }
+        return "";
+    }
+
+    public static @NotNull String trimEnd(final @NotNull String str, final @NotNull Predicate<? super Character> predicate) {
+        return trimEnd((CharSequence) str, predicate).toString();
+    }
+
+    public static @NotNull CharSequence trimEnd(final @NotNull CharSequence seq, final @NotNull char... chars) {
+        return trimEnd(seq, e -> ArrayUtils.contains(chars, e));
+    }
+
+    public static @NotNull String trimEnd(final @NotNull String str, final @NotNull char... chars) {
+        return trimEnd(str, e -> ArrayUtils.contains(chars, e));
+    }
+
+    public static @NotNull CharSequence trimEnd(final @NotNull CharSequence seq) {
+        return trimEnd(seq, Character::isWhitespace);
+    }
+
+    public static @NotNull String trimEnd(final @NotNull String str) {
+        return trimEnd((CharSequence) str).toString();
+    }
+
+    public static @NotNull String trimIndent(final @NotNull String str) {
+        return replaceIndent(str, "");
+    }
+
+    public static @NotNull String trimMargin(final @NotNull String str) {
+        return trimMargin(str, "|");
+    }
+
+    public static @NotNull String trimMargin(final @NotNull String str, final @NotNull String marginPrefix) {
+        return replaceIndentByMargin(str, "", marginPrefix);
+    }
+
+    public static @NotNull CharSequence trimStart(final @NotNull CharSequence seq, final @NotNull Predicate<? super Character> predicate) {
+        final Predicate<? super Character> negated = predicate.negate();
+        final int length = seq.length();
+        for (int i = 0; i < length; i++) {
+            final char element = seq.charAt(i);
+            if (negated.test(element)) {
+                return seq.subSequence(i, length);
+            }
+        }
+        return "";
+    }
+
+    public static @NotNull String trimStart(final @NotNull String str, final @NotNull Predicate<? super Character> predicate) {
+        return trimStart((CharSequence) str, predicate).toString();
+    }
+
+    public static @NotNull CharSequence trimStart(final @NotNull CharSequence seq, final @NotNull char... chars) {
+        return trimStart(seq, e -> ArrayUtils.contains(chars, e));
+    }
+
+    public static @NotNull String trimStart(final @NotNull String str, final @NotNull char... chars) {
+        return trimStart(str, e -> ArrayUtils.contains(chars, e));
+    }
+
+    public static @NotNull CharSequence trimStart(final @NotNull CharSequence seq) {
+        return trimStart(seq, Character::isWhitespace);
+    }
+
+    public static @NotNull String trimStart(final @NotNull String str) {
+        return trimStart((CharSequence) str).toString();
+    }
+
+    public static @NotNull List<String> windowed(final @NotNull CharSequence seq, final @Range(from = 1, to = Integer.MAX_VALUE) int size) {
         return windowed(seq, size, 1, false, CharSequence::toString);
     }
 
-    public static List<String> windowed(final CharSequence seq, final int size, final int step) {
+    public static @NotNull List<String> windowed(final @NotNull CharSequence seq, final @Range(from = 1, to = Integer.MAX_VALUE) int size,
+                                                 final @Range(from = 1, to = Integer.MAX_VALUE) int step) {
         return windowed(seq, size, step, false, CharSequence::toString);
     }
 
-    public static List<String> windowed(final CharSequence seq, final int size, final boolean partialWindows) {
+    public static @NotNull List<String> windowed(final @NotNull CharSequence seq, final @Range(from = 1, to = Integer.MAX_VALUE) int size,
+                                                 final boolean partialWindows) {
         return windowed(seq, size, 1, partialWindows, CharSequence::toString);
     }
 
-    public static List<String> windowed(final CharSequence seq, final int size, final int step,
-                                        final boolean partialWindows) {
+    public static @NotNull List<String> windowed(final @NotNull CharSequence seq, final @Range(from = 1, to = Integer.MAX_VALUE) int size,
+                                                 final @Range(from = 1, to = Integer.MAX_VALUE) int step, final boolean partialWindows) {
         return windowed(seq, size, step, partialWindows, CharSequence::toString);
     }
 
-    public static <R> List<R> windowed(final @NotNull CharSequence seq, final int size, final int step,
-                                       final boolean partialWindows,
-                                       final @NotNull Function<? super CharSequence, ? extends R> transform) {
+    public static @NotNull <R> List<R> windowed(final @NotNull CharSequence seq, final @Range(from = 1, to = Integer.MAX_VALUE) int size,
+                                                final @Range(from = 1, to = Integer.MAX_VALUE) int step, final boolean partialWindows,
+                                                final @NotNull Function<? super CharSequence, ? extends R> transform) {
+        checkWindowSizeStep(size, step);
         final int length = seq.length();
         final List<R> result = new ArrayList<>(length + step - 1 / step);
         int index = 0;
@@ -2315,17 +2726,48 @@ public final class StringUtils {
         return result;
     }
 
+    public static @NotNull List<Pair<Character, Character>> zip(final @NotNull CharSequence first, final @NotNull CharSequence second) {
+        return zip(first, second, Pair::new);
+    }
+
+    public static @NotNull <V> List<V> zip(final @NotNull CharSequence first, final @NotNull CharSequence second,
+                                           final @NotNull BiFunction<? super Character, ? super Character, ? extends V> transform) {
+        final int length = Math.min(first.length(), second.length());
+        final List<V> list = new ArrayList<>(length);
+        for (int i = 0; i < length; i++) {
+            list.add(transform.apply(first.charAt(i), second.charAt(i)));
+        }
+        return list;
+    }
+
+    public static @NotNull List<Pair<Character, Character>> zipWithNext(final @NotNull CharSequence seq) {
+        return zipWithNext(seq, Pair::new);
+    }
+
+    public static @NotNull <R> List<R> zipWithNext(final @NotNull CharSequence seq,
+                                                   final @NotNull BiFunction<? super Character, ? super Character, ? extends R> transform) {
+        final int size = seq.length() - 1;
+        if (size < 1) {
+            return emptyList();
+        }
+        final List<R> result = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            result.add(transform.apply(seq.charAt(i), seq.charAt(i + 1)));
+        }
+        return result;
+    }
+
     // Private Stuff
 
     // Implementation of regionMatches for CharSequences.
-    private static boolean regionMatchesImpl(final CharSequence first, final int firstOffset, final CharSequence second, final int secondOffset,
+    private static boolean regionMatchesImpl(final @NotNull CharSequence first, final int firstOffset, final @NotNull CharSequence second, final int secondOffset,
                                              final int length) {
         return regionMatchesImpl(first, firstOffset, second, secondOffset, length, false);
     }
 
     // Implementation of regionMatches for CharSequences ignoring the case
-    private static boolean regionMatchesImpl(final CharSequence first, final int firstOffset, final CharSequence second,
-                                             final int secondOffset, final int length, final boolean ignoreCase) {
+    private static boolean regionMatchesImpl(final @NotNull CharSequence first, final int firstOffset, final @NotNull CharSequence second, final int secondOffset,
+                                             final int length, final boolean ignoreCase) {
         final int firstLength = first.length();
         final int secondLength = second.length();
 
@@ -2341,12 +2783,12 @@ public final class StringUtils {
         return true;
     }
 
-    private static Optional<Pair<Integer, String>> findAnyOf(final CharSequence seq, final Collection<String> strings, final int startIndex,
-                                                             final boolean ignoreCase, final boolean last) {
-
+    private static @NotNull Optional<Pair<Integer, String>> findAnyOf(final @NotNull CharSequence seq, final @NotNull Collection<String> strings,
+                                                                      final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase,
+                                                                      final boolean last) {
         if (!ignoreCase && strings.size() == 1) {
             final String str = CollectionUtils.single(strings);
-            final int index = last ? str.lastIndexOf(startIndex) : str.indexOf(startIndex);
+            final int index = last ? lastIndexOf(seq, str, startIndex) : indexOf(seq, str, startIndex);
             return index < 0 ? empty() : of(new Pair<>(index, str));
         }
 
@@ -2403,8 +2845,10 @@ public final class StringUtils {
         return empty();
     }
 
-    private static int indexOf(final CharSequence first, final CharSequence second, final int startIndex, final int endIndex,
-                               final boolean ignoreCase, final boolean last) {
+    private static @Range(from = -1, to = Integer.MAX_VALUE) int indexOf(final @NotNull CharSequence first, final @NotNull CharSequence second,
+                                                                         final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex,
+                                                                         final @Range(from = 0, to = Integer.MAX_VALUE) int endIndex, final boolean ignoreCase,
+                                                                         final boolean last) {
         if (first instanceof String && second instanceof String) {
             if (last) {
                 final int start = coerceAtMost(startIndex, lastIndex(first));
@@ -2452,13 +2896,14 @@ public final class StringUtils {
 
     @Contract(pure = true)
     private static @NotNull Sequence<IntRange> rangesDelimitedBy(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters,
-                                                                 final boolean ignoreCase, final int limit) {
+                                                                 final boolean ignoreCase, final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
         return rangesDelimitedBy(seq, delimiters, 0, ignoreCase, limit);
     }
 
     @Contract(value = "_, _, _, _, _ -> new", pure = true)
     private static @NotNull Sequence<IntRange> rangesDelimitedBy(final @NotNull CharSequence seq, final @NotNull Collection<String> delimiters,
-                                                                 final int startIndex, final boolean ignoreCase, final int limit) {
+                                                                 final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase,
+                                                                 final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
         return new DelimitedRangesSequence(seq, startIndex, limit, (charSeq, currentIndex) -> {
             final Optional<Pair<Integer, String>> optional = findAnyOf(charSeq, delimiters, currentIndex, ignoreCase, false);
             if (optional.isPresent()) {
@@ -2471,26 +2916,28 @@ public final class StringUtils {
     }
 
     @Contract(pure = true)
-    private static @NotNull Sequence<IntRange> rangesDelimitedBy(final CharSequence seq, final char[] delimiters, final boolean ignoreCase, final int limit) {
+    private static @NotNull Sequence<IntRange> rangesDelimitedBy(final @NotNull CharSequence seq, final @NotNull char[] delimiters, final boolean ignoreCase,
+                                                                 final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
         return rangesDelimitedBy(seq, delimiters, 0, ignoreCase, limit);
     }
 
     @Contract(value = "_, _, _, _, _ -> new", pure = true)
-    private static @NotNull Sequence<IntRange> rangesDelimitedBy(final CharSequence seq, final char[] delimiters, final int startIndex,
-                                                                 final boolean ignoreCase, final int limit) {
+    private static @NotNull Sequence<IntRange> rangesDelimitedBy(final @NotNull CharSequence seq, final @NotNull char[] delimiters,
+                                                                 final @Range(from = 0, to = Integer.MAX_VALUE) int startIndex, final boolean ignoreCase,
+                                                                 final @Range(from = 0, to = Integer.MAX_VALUE) int limit) {
         return new DelimitedRangesSequence(seq, startIndex, limit, (charSeq, currentIndex) -> {
             final int i = indexOfAny(charSeq, delimiters, currentIndex, ignoreCase);
             return i < 0 ? empty() : of(new Pair<>(i, 1));
         });
     }
 
-    private static int indentWidth(final String str) {
+    private static @Range(from = 0, to = Integer.MAX_VALUE) int indentWidth(final @NotNull String str) {
         final int index = indexOfFirst(str, c -> !isWhitespace(c));
         return index == -1 ? str.length() : index;
     }
 
     @NonNls
-    private static @NotNull Function<? super String, String> getIndentFunction(final String indent) {
+    private static @NotNull Function<? super String, String> getIndentFunction(final @NotNull String indent) {
         return isEmpty(indent) ? (line -> line) : (line -> indent + line);
     }
 
@@ -2515,5 +2962,52 @@ public final class StringUtils {
         } while (nextIndex != -1);
         result.add(substring(seq, currentOffset, seq.length()));
         return result;
+    }
+
+    /**
+     * Recommended floating point number validation RegEx from the javadoc of `java.lang.Double.valueOf(String)`
+     */
+    private static class ScreenFloatValueRegEx {
+        private static final Regex value;
+
+        static {
+            @NonNls final String Digits = "(\\p{Digit}+)";
+            @NonNls final String HexDigits = "(\\p{XDigit}+)";
+            @NonNls final String Exp = "[eE][+-]?" + Digits;
+            @NonNls final String HexString = "(0[xX]" + HexDigits + "(\\.)?)|" +
+                "(0[xX]" + HexDigits + "?(\\.)" + HexDigits + ")";
+            @NonNls final String Number = "(" + Digits + "(\\.)?(" + Digits + "?)(" + Exp + ")?)|" +
+                "(\\.(" + Digits + ")(" + Exp + ")?)|" +
+                "((" + HexString + ")[pP][+-]?" + Digits + ")";
+            final String fpRegex = "[\\x00-\\x20]*[+-]?(NaN|Infinity|((" + Number + ")[fFdD]?))[\\x00-\\x20]*";
+            value = new Regex(fpRegex);
+        }
+    }
+
+    private static @Nullable <T> T screenFloatValue(final @NotNull String str, final @NotNull Function<? super String, T> parse) {
+        try {
+            return ScreenFloatValueRegEx.value.matches(str) ? parse.apply(str) : null;
+        } catch (final NumberFormatException e) {   // overflow
+            return null;
+        }
+    }
+
+    @Contract(value = "_ -> param1", pure = true)
+    private static int checkRadix(@NonNls final int radix) {
+        if (radix >= MIN_RADIX && radix <= MAX_RADIX) {
+            return radix;
+        } else {
+            throw new IllegalArgumentException("radix " + radix + " was not in valid range " + MIN_RADIX + ".." + MAX_RADIX);
+        }
+    }
+
+    private static int digitOf(final char ch, final @Range(from = MIN_RADIX, to = MAX_RADIX) int radix) {
+        return Character.digit((int) ch, radix);
+    }
+
+    private static void checkWindowSizeStep(@NonNls final int size, @NonNls final int step) {
+        Preconditions.require(size > 0 && step > 0, () -> size == step ?
+            "size " + size + " must be greater than zero." :
+            "Both size " + size + " and step " + step + " must be greater than zero.");
     }
 }

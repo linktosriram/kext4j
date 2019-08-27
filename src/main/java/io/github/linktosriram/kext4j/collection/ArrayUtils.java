@@ -2,6 +2,7 @@ package io.github.linktosriram.kext4j.collection;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Range;
 
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
@@ -33,5 +34,21 @@ public final class ArrayUtils {
             }
         }
         return false;
+    }
+
+    @Contract(pure = true)
+    public static boolean contains(final @NotNull char[] arr, final char element) {
+        return indexOf(arr, element) >= 0;
+    }
+
+    @Contract(pure = true)
+    public static @Range(from = -1, to = Integer.MAX_VALUE) int indexOf(final @NotNull char[] arr, final char element) {
+        final int length = arr.length;
+        for (int i = 0; i < length; i++) {
+            if (element == arr[i]) {
+                return i;
+            }
+        }
+        return -1;
     }
 }
