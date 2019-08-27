@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/linktosriram/kext4j.svg?branch=master)](https://travis-ci.org/linktosriram/kext4j)
+[![Build Status](https://travis-ci.com/linktosriram/kext4j.svg?branch=master)](https://travis-ci.com/linktosriram/kext4j)
 
 # kext4j
 
